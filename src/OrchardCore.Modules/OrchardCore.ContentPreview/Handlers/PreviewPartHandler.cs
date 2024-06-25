@@ -27,12 +27,12 @@ namespace OrchardCore.ContentPreview.Handlers
         }
 
         /// <summary>
-        /// Get the pattern from the AutoroutePartSettings property for its type
+        /// Get the pattern from the AutoroutePartSettings property for its type.
         /// </summary>
-        private string GetPattern(PreviewPart part)
+        private async Task<string> GetPatternAsync(PreviewPart part)
         {
-            var contentTypeDefinition = _contentDefinitionManager.GetTypeDefinition(part.ContentItem.ContentType);
-            var contentTypePartDefinition = contentTypeDefinition.Parts.FirstOrDefault(x => string.Equals(x.PartDefinition.Name, "PreviewPart"));
+            var contentTypeDefinition = await _contentDefinitionManager.GetTypeDefinitionAsync(part.ContentItem.ContentType);
+            var contentTypePartDefinition = contentTypeDefinition.Parts.FirstOrDefault(x => string.Equals(x.PartDefinition.Name, "PreviewPart", StringComparison.Ordinal));
             var pattern = contentTypePartDefinition.GetSettings<PreviewPartSettings>().Pattern;
 
             return pattern;
@@ -40,7 +40,7 @@ namespace OrchardCore.ContentPreview.Handlers
 
         public override async Task GetContentItemAspectAsync(ContentItemAspectContext context, PreviewPart part)
         {
-            var pattern = GetPattern(part);
+            var pattern = await GetPatternAsync(part);
 
             if (!string.IsNullOrEmpty(pattern))
             {

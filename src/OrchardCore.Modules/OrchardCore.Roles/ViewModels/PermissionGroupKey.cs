@@ -14,7 +14,7 @@ public class PermissionGroupKey
     {
         if (string.IsNullOrWhiteSpace(key))
         {
-            throw new ArgumentException("The 'key' cannot be null or empty", nameof(key));
+            throw new ArgumentException($"The '{nameof(key)}' cannot be null or empty", nameof(key));
         }
 
         Key = key;
@@ -31,6 +31,6 @@ public class PermissionGroupKey
     {
         var other = obj as PermissionGroupKey;
 
-        return other != null && Key.Equals(other.Key);
+        return other != null && Key.Equals(other.Key, StringComparison.Ordinal);
     }
 }

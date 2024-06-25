@@ -6,7 +6,7 @@
     var index = 0;
 }
 
-<script asp-src="~/OrchardCore.AdminMenu/Scripts/admin-menu.min.js" at="Foot" depends-on="admin, jQuery-ui"></script>
+<script asp-src="~/OrchardCore.AdminMenu/Scripts/admin-menu.min.js" at="Foot" depends-on="jQuery-ui"></script>
 <style asp-src="~/OrchardCore.AdminMenu/Styles/admin-menu.min.css" debug-src="~/OrchardCore.AdminMenu/Styles/admin-menu.css"></style>
 
 <zone Name="Title"><h1>@RenderTitleSegments(T["Edit Nodes for '{0}'", Model.AdminMenu.Name])</h1></zone>
@@ -37,10 +37,10 @@
                 {
                     if (menuItem != null)
                     {
-                        dynamic adminNodeShape = await MenuItemDisplayManager.BuildDisplayAsync(menuItem, updater, "TreeSummary");
-                        adminNodeShape.AdminMenuId = Model.AdminMenu.Id;
-                        adminNodeShape.MenuItem = menuItem;
-                        adminNodeShape.Index = index++;
+                        var adminNodeShape = await MenuItemDisplayManager.BuildDisplayAsync(menuItem, updater, "TreeSummary");
+                        adminNodeShape.Properties["AdminMenuId"] = Model.AdminMenu.Id;
+                        adminNodeShape.Properties["MenuItem"] = menuItem;
+                        adminNodeShape.Properties["Index"] = index++;
 
                         @await DisplayAsync(adminNodeShape)
                     }

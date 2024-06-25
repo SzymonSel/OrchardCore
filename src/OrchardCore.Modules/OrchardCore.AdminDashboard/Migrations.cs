@@ -9,12 +9,14 @@ using YesSql.Sql;
 
 namespace OrchardCore.AdminDashboard
 {
-    public class Migrations : DataMigration
+    public sealed class Migrations : DataMigration
     {
         private readonly IContentDefinitionManager _contentDefinitionManager;
         private readonly IRecipeMigrator _recipeMigrator;
 
-        public Migrations(IContentDefinitionManager contentDefinitionManager, IRecipeMigrator recipeMigrator)
+        public Migrations(
+            IContentDefinitionManager contentDefinitionManager,
+            IRecipeMigrator recipeMigrator)
         {
             _contentDefinitionManager = contentDefinitionManager;
             _recipeMigrator = recipeMigrator;
@@ -22,17 +24,17 @@ namespace OrchardCore.AdminDashboard
 
         public async Task<int> CreateAsync()
         {
-            SchemaBuilder.CreateMapIndexTable<DashboardPartIndex>(table => table
+            await SchemaBuilder.CreateMapIndexTableAsync<DashboardPartIndex>(table => table
                .Column<double>("Position")
             );
 
-            SchemaBuilder.AlterIndexTable<DashboardPartIndex>(table => table
+            await SchemaBuilder.AlterIndexTableAsync<DashboardPartIndex>(table => table
                 .CreateIndex("IDX_DashboardPart_DocumentId",
                     "DocumentId",
-                    nameof(DashboardPartIndex.Position))
+                    "Position")
             );
 
-            _contentDefinitionManager.AlterPartDefinition("DashboardPart", builder => builder
+            await _contentDefinitionManager.AlterPartDefinitionAsync("DashboardPart", builder => builder
                 .Attachable()
                 .WithDescription("Provides a way to add widgets to a dashboard.")
                 );
@@ -51,12 +53,12 @@ namespace OrchardCore.AdminDashboard
         }
 
         // This code can be removed in a later version.
-        public int UpdateFrom2()
+        public async Task<int> UpdateFrom2Async()
         {
-            SchemaBuilder.AlterIndexTable<DashboardPartIndex>(table => table
+            await SchemaBuilder.AlterIndexTableAsync<DashboardPartIndex>(table => table
                 .CreateIndex("IDX_DashboardPart_DocumentId",
                     "DocumentId",
-                    nameof(DashboardPartIndex.Position))
+                    "Position")
             );
 
             return 3;

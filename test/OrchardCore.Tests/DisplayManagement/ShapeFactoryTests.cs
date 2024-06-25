@@ -62,6 +62,15 @@ namespace OrchardCore.Tests.DisplayManagement
         }
 
         [Fact]
+        public async Task CallSyntaxAsync()
+        {
+            dynamic factory = _serviceProvider.GetService<IShapeFactory>();
+            var foo = await factory.FooAsync();
+            ShapeMetadata metadata = foo.Metadata;
+            Assert.Equal("Foo", metadata.Type);
+        }
+
+        [Fact]
         public async Task CallInitializer()
         {
             dynamic factory = _serviceProvider.GetService<IShapeFactory>();
@@ -117,7 +126,7 @@ namespace OrchardCore.Tests.DisplayManagement
             Assert.Equal("Baz", foo.Baz);
         }
 
-        private class SubShape : Shape
+        private sealed class SubShape : Shape
         {
         }
     }

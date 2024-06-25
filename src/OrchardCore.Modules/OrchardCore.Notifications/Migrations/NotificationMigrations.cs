@@ -1,15 +1,16 @@
 using System;
+using System.Threading.Tasks;
 using OrchardCore.Data.Migration;
 using OrchardCore.Notifications.Indexes;
 using YesSql.Sql;
 
 namespace OrchardCore.Notifications.Migrations;
 
-public class NotificationMigrations : DataMigration
+public sealed class NotificationMigrations : DataMigration
 {
-    public int Create()
+    public async Task<int> CreateAsync()
     {
-        SchemaBuilder.CreateMapIndexTable<NotificationIndex>(table => table
+        await SchemaBuilder.CreateMapIndexTableAsync<NotificationIndex>(table => table
             .Column<string>("NotificationId", column => column.WithLength(26))
             .Column<string>("UserId", column => column.WithLength(26))
             .Column<bool>("IsRead")
@@ -19,7 +20,7 @@ public class NotificationMigrations : DataMigration
             collection: NotificationConstants.NotificationCollection
         );
 
-        SchemaBuilder.AlterIndexTable<NotificationIndex>(table => table
+        await SchemaBuilder.AlterIndexTableAsync<NotificationIndex>(table => table
             .CreateIndex("IDX_NotificationIndex_DocumentId",
                 "DocumentId",
                 "NotificationId",

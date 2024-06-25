@@ -22,12 +22,13 @@ namespace OrchardCore.ContentFields.Indexing.SQL
         public string BigUrl { get; set; }
         public string Text { get; set; }
         public string BigText { get; set; }
+        public string Target { get; set; }
     }
 
     public class LinkFieldIndexProvider : ContentFieldIndexProvider
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly HashSet<string> _ignoredTypes = new();
+        private readonly HashSet<string> _ignoredTypes = [];
         private IContentDefinitionManager _contentDefinitionManager;
 
         public LinkFieldIndexProvider(IServiceProvider serviceProvider)
@@ -38,7 +39,7 @@ namespace OrchardCore.ContentFields.Indexing.SQL
         public override void Describe(DescribeContext<ContentItem> context)
         {
             context.For<LinkFieldIndex>()
-                .Map(contentItem =>
+                .Map(async contentItem =>
                 {
                     // Remove index records of soft deleted items.
                     if (!contentItem.Published && !contentItem.Latest)
@@ -52,16 +53,11 @@ namespace OrchardCore.ContentFields.Indexing.SQL
                         return null;
                     }
 
-                    if (!contentItem.Latest && !contentItem.Published)
-                    {
-                        return null;
-                    }
-
                     // Lazy initialization because of ISession cyclic dependency
                     _contentDefinitionManager ??= _serviceProvider.GetRequiredService<IContentDefinitionManager>();
 
                     // Search for LinkField
-                    var contentTypeDefinition = _contentDefinitionManager.GetTypeDefinition(contentItem.ContentType);
+                    var contentTypeDefinition = await _contentDefinitionManager.GetTypeDefinitionAsync(contentItem.ContentType);
 
                     // This can occur when content items become orphaned, particularly layer widgets when a layer is removed, before its widgets have been unpublished.
                     if (contentTypeDefinition == null)
@@ -91,12 +87,13 @@ namespace OrchardCore.ContentFields.Indexing.SQL
                                 ContentItemId = contentItem.ContentItemId,
                                 ContentItemVersionId = contentItem.ContentItemVersionId,
                                 ContentType = contentItem.ContentType,
-                                ContentPart = pair.Definition.PartDefinition.Name,
+                                ContentPart = pair.Definition.ContentTypePartDefinition.Name,
                                 ContentField = pair.Definition.Name,
                                 Url = pair.Field.Url?[..Math.Min(pair.Field.Url.Length, LinkFieldIndex.MaxUrlSize)],
                                 BigUrl = pair.Field.Url,
                                 Text = pair.Field.Text?[..Math.Min(pair.Field.Text.Length, LinkFieldIndex.MaxTextSize)],
                                 BigText = pair.Field.Text,
+                                Target = pair.Field.Target,
                             });
                 });
         }

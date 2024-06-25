@@ -22,11 +22,8 @@ namespace OrchardCore.Microsoft.Authentication.Services
             S = stringLocalizer;
         }
 
-        public async Task<MicrosoftAccountSettings> GetSettingsAsync()
-        {
-            var container = await _siteService.GetSiteSettingsAsync();
-            return container.As<MicrosoftAccountSettings>();
-        }
+        public Task<MicrosoftAccountSettings> GetSettingsAsync()
+            => _siteService.GetSettingsAsync<MicrosoftAccountSettings>();
 
         public async Task<MicrosoftAccountSettings> LoadSettingsAsync()
         {
@@ -36,10 +33,7 @@ namespace OrchardCore.Microsoft.Authentication.Services
 
         public async Task UpdateSettingsAsync(MicrosoftAccountSettings settings)
         {
-            if (settings == null)
-            {
-                throw new ArgumentNullException(nameof(settings));
-            }
+            ArgumentNullException.ThrowIfNull(settings);
 
             var container = await _siteService.LoadSiteSettingsAsync();
             container.Alter<MicrosoftAccountSettings>(nameof(MicrosoftAccountSettings), aspect =>
@@ -54,10 +48,7 @@ namespace OrchardCore.Microsoft.Authentication.Services
 
         public IEnumerable<ValidationResult> ValidateSettings(MicrosoftAccountSettings settings)
         {
-            if (settings == null)
-            {
-                throw new ArgumentNullException(nameof(settings));
-            }
+            ArgumentNullException.ThrowIfNull(settings);
 
             if (string.IsNullOrWhiteSpace(settings.AppId))
             {

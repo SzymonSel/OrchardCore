@@ -1,17 +1,14 @@
 using System.Threading.Tasks;
 using OrchardCore.ContentManagement.Metadata;
 using OrchardCore.ContentManagement.Metadata.Settings;
-using OrchardCore.ContentManagement.Records;
 using OrchardCore.Data.Migration;
 using OrchardCore.Media.Settings;
 using OrchardCore.Recipes;
 using OrchardCore.Recipes.Services;
-using OrchardCore.Seo.Indexes;
-using YesSql.Sql;
 
 namespace OrchardCore.Seo
 {
-    public class Migrations : DataMigration
+    public sealed class Migrations : DataMigration
     {
         private readonly IContentDefinitionManager _contentDefinitionManager;
         private readonly IRecipeMigrator _recipeMigrator;
@@ -24,7 +21,7 @@ namespace OrchardCore.Seo
 
         public async Task<int> CreateAsync()
         {
-            _contentDefinitionManager.AlterPartDefinition("SeoMetaPart", builder => builder
+            await _contentDefinitionManager.AlterPartDefinitionAsync("SeoMetaPart", builder => builder
                 .Attachable()
                 .WithDescription("Provides a part that allows SEO meta descriptions to be applied to a content item.")
                 .WithField("DefaultSocialImage", field => field

@@ -27,13 +27,31 @@ namespace OrchardCore.Media
         public int MaxBrowserCacheDays { get; set; }
 
         /// <summary>
+        /// The default number of days for the media cache control header when serving secure files.
+        /// </summary>
+        /// <remarks>
+        /// Set to 0 to disable caching secure files.
+        /// </remarks>
+        public int MaxSecureFilesBrowserCacheDays { get; set; }
+
+        /// <summary>
         /// The maximum number of days a cached resized media item will be valid for, before being rebuilt on request.
         /// </summary>
         public int MaxCacheDays { get; set; }
 
         /// <summary>
+        /// The time before a stale item is removed from the resized media cache, if not provided there is no cleanup.
+        /// </summary>
+        public TimeSpan? ResizedCacheMaxStale { get; set; }
+
+        /// <summary>
+        /// The time before a stale remote media item is removed from the cache, if not provided there is no cleanup.
+        /// </summary>
+        public TimeSpan? RemoteCacheMaxStale { get; set; }
+
+        /// <summary>
         /// The maximum size of an uploaded file in bytes.
-        /// NB: You might still need to configure the limit in IIS (https://docs.microsoft.com/en-us/iis/configuration/system.webserver/security/requestfiltering/requestlimits/)
+        /// NB: You might still need to configure the limit in IIS (https://docs.microsoft.com/en-us/iis/configuration/system.webserver/security/requestfiltering/requestlimits/).
         /// </summary>
         public int MaxFileSize { get; set; }
 
@@ -48,7 +66,7 @@ namespace OrchardCore.Media
         public PathString AssetsRequestPath { get; set; }
 
         /// <summary>
-        /// The path used to store media assets. The path can be relative to the tenant's App_Data folder, or absolute.
+        /// The name of the folder used to store media assets inside the App_Data folder.
         /// </summary>
         public string AssetsPath { get; set; }
 

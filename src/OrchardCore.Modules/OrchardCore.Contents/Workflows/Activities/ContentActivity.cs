@@ -1,8 +1,9 @@
-using System;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Localization;
-using Newtonsoft.Json;
 using OrchardCore.ContentManagement;
 using OrchardCore.ContentManagement.Workflows;
 using OrchardCore.Workflows.Abstractions.Models;
@@ -15,9 +16,13 @@ namespace OrchardCore.Contents.Workflows.Activities
 {
     public abstract class ContentActivity : Activity
     {
+
         protected readonly IStringLocalizer S;
 
-        protected ContentActivity(IContentManager contentManager, IWorkflowScriptEvaluator scriptEvaluator, IStringLocalizer localizer)
+        protected ContentActivity(
+            IContentManager contentManager,
+            IWorkflowScriptEvaluator scriptEvaluator,
+            IStringLocalizer localizer)
         {
             ContentManager = contentManager;
             ScriptEvaluator = scriptEvaluator;
@@ -29,7 +34,7 @@ namespace OrchardCore.Contents.Workflows.Activities
         protected IWorkflowScriptEvaluator ScriptEvaluator { get; }
 
         /// <summary>
-        /// A <see cref="ContentEventContext"/> updated when executed inline from a <see cref="ContentEvent"/>
+        /// A <see cref="ContentEventContext"/> updated when executed inline from a <see cref="ContentEvent"/>.
         /// </summary>
         protected ContentEventContext InlineEvent { get; private set; } = new ContentEventContext();
 
@@ -68,6 +73,64 @@ namespace OrchardCore.Contents.Workflows.Activities
             return Outcomes("Done");
         }
 
+        public override async Task OnWorkflowRestartingAsync(WorkflowExecutionContext workflowContext, CancellationToken cancellationToken = default)
+        {
+            ContentItem contentItem = null;
+
+            if (workflowContext.Input.TryGetValue(ContentEventConstants.ContentEventInputKey, out var contentEvent))
+            {
+                if (contentEvent is not JsonObject jsonObject)
+                {
+                    jsonObject = [];
+                    if (contentEvent is Dictionary<string, object> items)
+                    {
+                        foreach (var item in items)
+                        {
+                            jsonObject[item.Key] = JsonSerializer.SerializeToNode(item.Value);
+                        }
+                    }
+                }
+
+                var contentEventContext = jsonObject.ToObject<ContentEventContext>();
+
+                if (contentEventContext?.ContentItemVersionId != null)
+                {
+                    contentItem = await ContentManager.GetVersionAsync(contentEventContext.ContentItemVersionId);
+                }
+                if (contentItem == null && contentEventContext?.ContentItemId != null)
+                {
+                    contentItem = await ContentManager.GetAsync(contentEventContext.ContentItemId);
+                }
+            }
+
+            if (contentItem == null && workflowContext.Input.TryGetValue(ContentEventConstants.ContentItemInputKey, out var contentItemEvent))
+            {
+                if (contentItemEvent is not JsonObject jsonObject)
+                {
+                    jsonObject = [];
+                    if (contentEvent is Dictionary<string, object> items)
+                    {
+                        foreach (var item in items)
+                        {
+                            jsonObject[item.Key] = JsonSerializer.SerializeToNode(item.Value);
+                        }
+                    }
+                }
+
+                var existingContentItem = jsonObject.ToObject<ContentItem>();
+
+                if (existingContentItem?.ContentItemId != null)
+                {
+                    contentItem = await ContentManager.GetAsync(existingContentItem.ContentItemId);
+                }
+            }
+
+            if (contentItem != null)
+            {
+                workflowContext.Input[ContentEventConstants.ContentItemInputKey] = contentItem;
+            }
+        }
+
         protected virtual async Task<IContent> GetContentAsync(WorkflowExecutionContext workflowContext)
         {
             IContent content;
@@ -89,8 +152,8 @@ namespace OrchardCore.Contents.Workflows.Activities
                 else
                 {
                     // Try to map the result to a content item.
-                    var json = JsonConvert.SerializeObject(result);
-                    content = JsonConvert.DeserializeObject<ContentItem>(json);
+                    var json = JConvert.SerializeObject(result);
+                    content = JConvert.DeserializeObject<ContentItem>(json);
                 }
             }
             else
@@ -100,7 +163,7 @@ namespace OrchardCore.Contents.Workflows.Activities
                     ?? workflowContext.Properties.GetValue<IContent>(ContentEventConstants.ContentItemInputKey);
             }
 
-            if (content != null && content.ContentItem.ContentItemId != null)
+            if (content?.ContentItem?.ContentItemId != null)
             {
                 return content;
             }

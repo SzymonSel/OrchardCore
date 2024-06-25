@@ -61,7 +61,7 @@ namespace OrchardCore.Alias.Handlers
                 return;
             }
 
-            var pattern = GetPattern(part);
+            var pattern = await GetPatternAsync(part);
 
             if (!string.IsNullOrEmpty(pattern))
             {
@@ -122,10 +122,10 @@ namespace OrchardCore.Alias.Handlers
         /// <summary>
         /// Get the pattern from the AliasPartSettings property for its type.
         /// </summary>
-        private string GetPattern(AliasPart part)
+        private async Task<string> GetPatternAsync(AliasPart part)
         {
-            var contentTypeDefinition = _contentDefinitionManager.GetTypeDefinition(part.ContentItem.ContentType);
-            var contentTypePartDefinition = contentTypeDefinition.Parts.FirstOrDefault(x => string.Equals(x.PartDefinition.Name, nameof(AliasPart)));
+            var contentTypeDefinition = await _contentDefinitionManager.GetTypeDefinitionAsync(part.ContentItem.ContentType);
+            var contentTypePartDefinition = contentTypeDefinition.Parts.FirstOrDefault(x => string.Equals(x.PartDefinition.Name, nameof(AliasPart), StringComparison.Ordinal));
             var pattern = contentTypePartDefinition.GetSettings<AliasPartSettings>().Pattern;
 
             return pattern;

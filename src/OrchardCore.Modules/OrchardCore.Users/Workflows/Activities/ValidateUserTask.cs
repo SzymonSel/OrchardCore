@@ -10,7 +10,7 @@ using OrchardCore.Workflows.Models;
 
 namespace OrchardCore.Users.Workflows.Activities
 {
-    public class ValidateUserTask : TaskActivity
+    public class ValidateUserTask : TaskActivity<ValidateUserTask>
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly string _roleClaimType;
@@ -22,8 +22,6 @@ namespace OrchardCore.Users.Workflows.Activities
             _roleClaimType = optionsAccessor.Value.ClaimsIdentity.RoleClaimType;
             S = localizer;
         }
-
-        public override string Name => nameof(ValidateUserTask);
 
         public override LocalizedString Category => S["User"];
 
@@ -75,10 +73,10 @@ namespace OrchardCore.Users.Workflows.Activities
                     }
                 }
 
-                return Outcomes("Authenticated");
+                return Outcomes(OrchardCoreConstants.Roles.Authenticated);
             }
 
-            return Outcomes("Anonymous");
+            return Outcomes(OrchardCoreConstants.Roles.Anonymous);
         }
     }
 }

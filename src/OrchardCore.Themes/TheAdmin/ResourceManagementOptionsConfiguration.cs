@@ -3,7 +3,7 @@ using OrchardCore.ResourceManagement;
 
 namespace OrchardCore.Themes.TheAdmin
 {
-    public class ResourceManagementOptionsConfiguration : IConfigureOptions<ResourceManagementOptions>
+    public sealed class ResourceManagementOptionsConfiguration : IConfigureOptions<ResourceManagementOptions>
     {
         private static readonly ResourceManifest _manifest;
 
@@ -24,9 +24,14 @@ namespace OrchardCore.Themes.TheAdmin
                 .SetVersion("1.0.0");
 
             _manifest
+                .DefineScript("admin-main")
+                .SetUrl("~/TheAdmin/js/TheAdmin-main.min.js", "~/TheAdmin/js/TheAdmin-main.js")
+                .SetDependencies("admin-head")
+                .SetVersion("1.0.0");
+
+            _manifest
                 .DefineStyle("admin")
                 .SetUrl("~/TheAdmin/css/TheAdmin.min.css", "~/TheAdmin/css/TheAdmin.css")
-                .SetDependencies("bootstrap")
                 .SetVersion("1.0.0");
         }
 

@@ -1,3 +1,5 @@
+#pragma warning disable CA1707 // Remove the underscores from member name
+
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -17,9 +19,9 @@ using OrchardCore.DisplayManagement.Utilities;
 
 namespace OrchardCore.Navigation
 {
-    public class PagerShapesTableProvider : IShapeTableProvider
+    public class PagerShapesTableProvider : ShapeTableProvider
     {
-        public void Discover(ShapeTableBuilder builder)
+        public override ValueTask DiscoverAsync(ShapeTableBuilder builder)
         {
             builder.Describe("Pager")
                 .OnCreated(created =>
@@ -127,6 +129,8 @@ namespace OrchardCore.Navigation
                         displaying.Shape.Metadata.Alternates.Add("Pager_Links__" + pagerId.EncodeAlternateElement());
                     }
                 });
+
+            return ValueTask.CompletedTask;
         }
     }
 
@@ -511,7 +515,7 @@ namespace OrchardCore.Navigation
                 }
             }
 
-            var routeValues = shape.GetProperty<RouteValueDictionary>("RouteValues") ?? new RouteValueDictionary();
+            var routeValues = shape.GetProperty<RouteValueDictionary>("RouteValues") ?? [];
             if (!Disabled)
             {
                 shape.Attributes["href"] = Url.Action((string)routeValues["action"], (string)routeValues["controller"], routeValues);

@@ -119,20 +119,20 @@ namespace OrchardCore.DisplayManagement.Shapes
         }
     }
 
-    public class CoreShapesTableProvider : IShapeTableProvider
+    public class CoreShapesTableProvider : ShapeTableProvider
     {
-        public void Discover(ShapeTableBuilder builder)
+        public override ValueTask DiscoverAsync(ShapeTableBuilder builder)
         {
             builder.Describe("List")
                 .OnCreated(created =>
                 {
-                    dynamic list = created.Shape;
-
-                    // Intializes the common properties of a List shape
+                    // Initializes the common properties of a List shape
                     // such that views can safely add values to them.
-                    list.ItemClasses = new List<string>();
-                    list.ItemAttributes = new Dictionary<string, string>();
+                    created.Shape.Properties["ItemClasses"] = new List<string>();
+                    created.Shape.Properties["ItemAttributes"] = new Dictionary<string, string>();
                 });
+
+            return ValueTask.CompletedTask;
         }
     }
 }

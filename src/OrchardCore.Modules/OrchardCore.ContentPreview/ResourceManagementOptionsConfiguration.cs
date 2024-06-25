@@ -3,7 +3,7 @@ using OrchardCore.ResourceManagement;
 
 namespace OrchardCore.ContentPreview
 {
-    public class ResourceManagementOptionsConfiguration : IConfigureOptions<ResourceManagementOptions>
+    public sealed class ResourceManagementOptionsConfiguration : IConfigureOptions<ResourceManagementOptions>
     {
         private static readonly ResourceManifest _manifest;
 
@@ -13,8 +13,8 @@ namespace OrchardCore.ContentPreview
 
             _manifest
                 .DefineScript("contentpreview-edit")
-                .SetDependencies("admin")
                 .SetUrl("~/OrchardCore.ContentPreview/Scripts/contentpreview.edit.min.js", "~/OrchardCore.ContentPreview/Scripts/contentpreview.edit.js")
+                .SetDependencies("jQuery")
                 .SetVersion("1.0.0");
         }
 

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,10 +27,10 @@ namespace OrchardCore.Contents.Workflows.Drivers
         public async override Task<IDisplayResult> UpdateAsync(TActivity model, IUpdateModel updater)
         {
             var viewModel = new TViewModel();
-            if (await updater.TryUpdateModelAsync(viewModel, Prefix, x => x.SelectedContentTypeNames))
-            {
-                model.ContentTypeFilter = FilterContentTypesQuery(viewModel.SelectedContentTypeNames).ToList();
-            }
+            await updater.TryUpdateModelAsync(viewModel, Prefix, x => x.SelectedContentTypeNames);
+
+            model.ContentTypeFilter = (await FilterContentTypesQueryAsync(viewModel.SelectedContentTypeNames)).ToList();
+
             return Edit(model);
         }
 
@@ -39,9 +38,9 @@ namespace OrchardCore.Contents.Workflows.Drivers
         {
             return Combine(
                 Shape($"{typeof(TActivity).Name}_Fields_Thumbnail", new ContentEventViewModel<TActivity>(activity)).Location("Thumbnail", "Content"),
-                Factory($"{typeof(TActivity).Name}_Fields_Design", ctx =>
+                Factory($"{typeof(TActivity).Name}_Fields_Design", async ctx =>
                 {
-                    var contentTypeDefinitions = ContentDefinitionManager.ListTypeDefinitions().ToDictionary(x => x.Name);
+                    var contentTypeDefinitions = (await ContentDefinitionManager.ListTypeDefinitionsAsync()).ToDictionary(x => x.Name);
                     var selectedContentTypeDefinitions = activity.ContentTypeFilter.Select(x => contentTypeDefinitions[x]).ToList();
 
                     var shape = new ContentEventViewModel<TActivity>
@@ -55,12 +54,9 @@ namespace OrchardCore.Contents.Workflows.Drivers
             );
         }
 
-        /// <summary>
-        /// Filters out any content type that doesn't exist.
-        /// </summary>
-        protected IEnumerable<string> FilterContentTypesQuery(IEnumerable<string> contentTypeNames)
+        protected async Task<IEnumerable<string>> FilterContentTypesQueryAsync(IEnumerable<string> contentTypeNames)
         {
-            var contentTypeDefinitions = ContentDefinitionManager.ListTypeDefinitions().ToDictionary(x => x.Name);
+            var contentTypeDefinitions = (await ContentDefinitionManager.ListTypeDefinitionsAsync()).ToDictionary(x => x.Name);
             return contentTypeNames.Where(x => !string.IsNullOrWhiteSpace(x) && contentTypeDefinitions.ContainsKey(x));
         }
     }
