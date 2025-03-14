@@ -1,7 +1,4 @@
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -24,10 +21,10 @@ namespace OrchardCore.Users.Controllers;
 
 [Authorize]
 [Feature(UserConstants.Features.TwoFactorAuthentication)]
-public class TwoFactorAuthenticationController : TwoFactorAuthenticationBaseController, IUpdateModel
+public sealed class TwoFactorAuthenticationController : TwoFactorAuthenticationBaseController, IUpdateModel
 {
     private readonly ILogger _logger;
-    private readonly IEnumerable<ILoginFormEvent> _accountEvents;
+    private readonly IEnumerable<ILoginFormEvent> _loginFormEvents;
     private readonly IdentityOptions _identityOptions;
     private readonly IShapeFactory _shapeFactory;
     private readonly IDisplayManager<TwoFactorMethod> _twoFactorDisplayManager;
@@ -40,7 +37,7 @@ public class TwoFactorAuthenticationController : TwoFactorAuthenticationBaseCont
         IHtmlLocalizer<AccountController> htmlLocalizer,
         IStringLocalizer<AccountController> stringLocalizer,
         IOptions<TwoFactorOptions> twoFactorOptions,
-        IEnumerable<ILoginFormEvent> accountEvents,
+        IEnumerable<ILoginFormEvent> loginFormEvents,
         INotifier notifier,
         IDistributedCache distributedCache,
         IOptions<IdentityOptions> identityOptions,
@@ -58,7 +55,7 @@ public class TwoFactorAuthenticationController : TwoFactorAuthenticationBaseCont
             twoFactorOptions)
     {
         _logger = logger;
-        _accountEvents = accountEvents;
+        _loginFormEvents = loginFormEvents;
         _identityOptions = identityOptions.Value;
         _shapeFactory = shapeFactory;
         _twoFactorDisplayManager = twoFactorDisplayManager;
@@ -133,7 +130,7 @@ public class TwoFactorAuthenticationController : TwoFactorAuthenticationBaseCont
 
             if (result.Succeeded)
             {
-                await _accountEvents.InvokeAsync((e, user) => e.LoggedInAsync(user), user, _logger);
+                await _loginFormEvents.InvokeAsync((e, user) => e.LoggedInAsync(user), user, _logger);
 
                 return await LoggedInActionResultAsync(user, model.ReturnUrl);
             }
@@ -142,7 +139,7 @@ public class TwoFactorAuthenticationController : TwoFactorAuthenticationBaseCont
             {
                 _logger.LogWarning("User account locked out.");
                 ModelState.AddModelError(string.Empty, S["The account is locked out."]);
-                await _accountEvents.InvokeAsync((e, user) => e.IsLockedOutAsync(user), user, _logger);
+                await _loginFormEvents.InvokeAsync((e, user) => e.IsLockedOutAsync(user), user, _logger);
 
                 return RedirectToAccountLogin();
             }
@@ -150,7 +147,7 @@ public class TwoFactorAuthenticationController : TwoFactorAuthenticationBaseCont
             ModelState.AddModelError(string.Empty, S["Invalid verification code."]);
 
             // Login failed with a known user.
-            await _accountEvents.InvokeAsync((e, user) => e.LoggingInFailedAsync(user), user, _logger);
+            await _loginFormEvents.InvokeAsync((e, user) => e.LoggingInFailedAsync(user), user, _logger);
         }
 
         model.HasMultipleProviders = providers.Count > 1;
@@ -194,7 +191,7 @@ public class TwoFactorAuthenticationController : TwoFactorAuthenticationBaseCont
 
             if (result.Succeeded)
             {
-                await _accountEvents.InvokeAsync((e, user) => e.LoggedInAsync(user), user, _logger);
+                await _loginFormEvents.InvokeAsync((e, user) => e.LoggedInAsync(user), user, _logger);
 
                 return await LoggedInActionResultAsync(user, model.ReturnUrl);
             }
@@ -204,7 +201,7 @@ public class TwoFactorAuthenticationController : TwoFactorAuthenticationBaseCont
                 _logger.LogWarning("User account locked out.");
 
                 ModelState.AddModelError(string.Empty, S["The account is locked out"]);
-                await _accountEvents.InvokeAsync((e, user) => e.IsLockedOutAsync(user), user, _logger);
+                await _loginFormEvents.InvokeAsync((e, user) => e.IsLockedOutAsync(user), user, _logger);
 
                 return RedirectToAccountLogin();
             }
@@ -494,7 +491,7 @@ public class TwoFactorAuthenticationController : TwoFactorAuthenticationBaseCont
                 IsEnabled = providers.Contains(key),
             };
 
-            var shape = await _twoFactorDisplayManager.BuildDisplayAsync(method, this, "SummaryAdmin");
+            var shape = await _twoFactorDisplayManager.BuildDisplayAsync(method, this, OrchardCoreConstants.DisplayType.SummaryAdmin);
 
             model.AuthenticationMethods.Add(shape);
         }

@@ -9,28 +9,30 @@ using OrchardCore.Navigation;
 using OrchardCore.Recipes;
 using OrchardCore.Security.Permissions;
 
-namespace OrchardCore.AdminMenu
+namespace OrchardCore.AdminMenu;
+
+public sealed class Startup : StartupBase
 {
-    public sealed class Startup : StartupBase
+    public override void ConfigureServices(IServiceCollection services)
     {
-        public override void ConfigureServices(IServiceCollection services)
-        {
-            services.AddScoped<IPermissionProvider, Permissions>();
-            services.AddScoped<INavigationProvider, AdminMenu>();
-            services.AddScoped<IAdminMenuPermissionService, AdminMenuPermissionService>();
+        services.AddPermissionProvider<Permissions>();
+        services.AddNavigationProvider<AdminMenu>();
 
-            services.AddScoped<IAdminMenuService, AdminMenuService>();
-            services.AddScoped<AdminMenuNavigationProvidersCoordinator>();
+#pragma warning disable CS0618 // Type or member is obsolete
+        services.AddScoped<IAdminMenuPermissionService, AdminMenuPermissionService>();
+#pragma warning restore CS0618 // Type or member is obsolete
 
-            services.AddRecipeExecutionStep<AdminMenuStep>();
+        services.AddScoped<IAdminMenuService, AdminMenuService>();
+        services.AddScoped<AdminMenuNavigationProvidersCoordinator>();
 
-            services.AddDeployment<AdminMenuDeploymentSource, AdminMenuDeploymentStep, AdminMenuDeploymentStepDriver>();
+        services.AddRecipeExecutionStep<AdminMenuStep>();
 
-            // placeholder treeNode
-            services.AddAdminNode<PlaceholderAdminNode, PlaceholderAdminNodeNavigationBuilder, PlaceholderAdminNodeDriver>();
+        services.AddDeployment<AdminMenuDeploymentSource, AdminMenuDeploymentStep, AdminMenuDeploymentStepDriver>();
 
-            // link treeNode
-            services.AddAdminNode<LinkAdminNode, LinkAdminNodeNavigationBuilder, LinkAdminNodeDriver>();
-        }
+        // placeholder treeNode
+        services.AddAdminNode<PlaceholderAdminNode, PlaceholderAdminNodeNavigationBuilder, PlaceholderAdminNodeDriver>();
+
+        // link treeNode
+        services.AddAdminNode<LinkAdminNode, LinkAdminNodeNavigationBuilder, LinkAdminNodeDriver>();
     }
 }

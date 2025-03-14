@@ -1,19 +1,24 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using OrchardCore.Security.Permissions;
 
 namespace OrchardCore.Workflows;
 
 public sealed class Permissions : IPermissionProvider
 {
-    public static readonly Permission ManageWorkflows = new("ManageWorkflows", "Manage workflows", isSecurityCritical: true);
-    public static readonly Permission ExecuteWorkflows = new("ExecuteWorkflows", "Execute workflows", isSecurityCritical: true);
-
     private readonly IEnumerable<Permission> _allPermissions =
     [
-        ManageWorkflows,
-        ExecuteWorkflows,
+        WorkflowsPermissions.ManageWorkflows,
+        WorkflowsPermissions.ExecuteWorkflows,
+        WorkflowsPermissions.ManageWorkflowSettings,
     ];
+
+    [Obsolete("This will be removed in a future release. Instead use 'WorkflowsPermissions.ManageWorkflows'.")]
+    public static readonly Permission ManageWorkflows = WorkflowsPermissions.ManageWorkflows;
+
+    [Obsolete("This will be removed in a future release. Instead use 'WorkflowsPermissions.ExecuteWorkflows'.")]
+    public static readonly Permission ExecuteWorkflows = WorkflowsPermissions.ExecuteWorkflows;
+
+    [Obsolete("This will be removed in a future release. Instead use 'WorkflowsPermissions.ManageWorkflowSettings'.")]
+    public static readonly Permission ManageWorkflowSettings = WorkflowsPermissions.ManageWorkflowSettings;
 
     public Task<IEnumerable<Permission>> GetPermissionsAsync()
         => Task.FromResult(_allPermissions);

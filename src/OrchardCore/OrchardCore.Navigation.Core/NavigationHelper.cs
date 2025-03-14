@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Web;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.WebUtilities;
@@ -9,13 +7,10 @@ namespace OrchardCore.Navigation;
 
 public static class NavigationHelper
 {
-    /// <summary>
-    /// Checks if the given name matches the value <see cref="NavigationConstants.AdminId"/>.
-    /// </summary>
-    /// <param name="name"></param>
-    /// <returns>boolean.</returns>
-    public static bool IsAdminMenu(string name)
-        => NavigationConstants.AdminId == name;
+    public static bool UseLegacyFormat()
+    {
+        return AppContext.TryGetSwitch(NavigationConstants.LegacyAdminMenuNavigationSwitchKey, out var enable) && enable;
+    }
 
     /// <summary>
     /// Populates the menu shapes.

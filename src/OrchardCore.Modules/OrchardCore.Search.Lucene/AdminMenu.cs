@@ -1,20 +1,19 @@
-using System.Threading.Tasks;
 using Microsoft.Extensions.Localization;
 using OrchardCore.Navigation;
 
 namespace OrchardCore.Search.Lucene;
 
-public sealed class AdminMenu(IStringLocalizer<AdminMenu> localizer) : INavigationProvider
+public sealed class AdminMenu : AdminNavigationProvider
 {
-    internal readonly IStringLocalizer S = localizer;
+    internal readonly IStringLocalizer S;
 
-    public Task BuildNavigationAsync(string name, NavigationBuilder builder)
+    public AdminMenu(IStringLocalizer<AdminMenu> stringLocalizer)
     {
-        if (!NavigationHelper.IsAdminMenu(name))
-        {
-            return Task.CompletedTask;
-        }
+        S = stringLocalizer;
+    }
 
+    protected override ValueTask BuildAsync(NavigationBuilder builder)
+    {
         builder
             .Add(S["Search"], NavigationConstants.AdminMenuSearchPosition, search => search
                 .AddClass("search")
@@ -24,7 +23,7 @@ public sealed class AdminMenu(IStringLocalizer<AdminMenu> localizer) : INavigati
                         .Action("Index", "Admin", "OrchardCore.Search.Lucene")
                         .AddClass("luceneindices")
                         .Id("luceneindices")
-                        .Permission(Permissions.ManageLuceneIndexes)
+                        .Permission(LuceneSearchPermissions.ManageLuceneIndexes)
                         .LocalNav()
                      )
                 )
@@ -33,12 +32,12 @@ public sealed class AdminMenu(IStringLocalizer<AdminMenu> localizer) : INavigati
                         .Action("Query", "Admin", "OrchardCore.Search.Lucene")
                         .AddClass("lucenequery")
                         .Id("lucenequery")
-                        .Permission(Permissions.ManageLuceneIndexes)
+                        .Permission(LuceneSearchPermissions.ManageLuceneIndexes)
                         .LocalNav()
                     )
                 )
             );
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 }

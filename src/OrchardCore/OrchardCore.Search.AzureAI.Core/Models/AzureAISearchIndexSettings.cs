@@ -1,10 +1,13 @@
-using System.Collections.Generic;
-using System.Linq;
+using OrchardCore.Entities;
 
 namespace OrchardCore.Search.AzureAI.Models;
 
-public class AzureAISearchIndexSettings
+public class AzureAISearchIndexSettings : Entity
 {
+    public string Id { get; set; }
+
+    public string Source { get; set; }
+
     public string IndexName { get; set; }
 
     public string IndexFullName { get; set; }
@@ -13,13 +16,7 @@ public class AzureAISearchIndexSettings
 
     public string QueryAnalyzerName { get; set; }
 
-    public bool IndexLatest { get; set; }
-
-    public string[] IndexedContentTypes { get; set; }
-
-    public string Culture { get; set; }
-
-    public IList<AzureAISearchIndexMap> IndexMappings { get; set; }
+    public IList<AzureAISearchIndexMap> IndexMappings { get; init; } = [];
 
     private long _lastTaskId;
 

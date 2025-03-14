@@ -1,17 +1,16 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using OrchardCore.Security.Permissions;
 
 namespace OrchardCore.Admin;
 
 public sealed class PermissionsAdminSettings : IPermissionProvider
 {
-    public static readonly Permission ManageAdminSettings = new("ManageAdminSettings", "Manage Admin Settings");
-
     private readonly IEnumerable<Permission> _allPermissions =
     [
-        ManageAdminSettings,
+        AdminPermissions.ManageAdminSettings,
     ];
+
+    [Obsolete("This will be removed in a future release. Instead use 'AdminPermissions.ManageAdminSettings'.")]
+    public static readonly Permission ManageAdminSettings = AdminPermissions.ManageAdminSettings;
 
     public IEnumerable<PermissionStereotype> GetDefaultStereotypes() =>
     [

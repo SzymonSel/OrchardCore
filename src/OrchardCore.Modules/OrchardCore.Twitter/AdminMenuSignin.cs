@@ -1,83 +1,59 @@
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
 using OrchardCore.Navigation;
 
-namespace OrchardCore.Twitter
+namespace OrchardCore.Twitter;
+
+public sealed class AdminMenuSignIn : AdminNavigationProvider
 {
-    public sealed class AdminMenuSignin : INavigationProvider
+    private static readonly RouteValueDictionary _routeValues = new()
     {
-        private static readonly RouteValueDictionary _routeValues = new()
-        {
-            { "area", "OrchardCore.Settings" },
-            { "groupId", TwitterConstants.Features.Signin },
-        };
+        { "area", "OrchardCore.Settings" },
+        { "groupId", TwitterConstants.Features.Signin },
+    };
 
-        internal readonly IStringLocalizer S;
+    internal readonly IStringLocalizer S;
 
-        public AdminMenuSignin(IStringLocalizer<AdminMenuSignin> localizer)
-        {
-            S = localizer;
-        }
-
-        public Task BuildNavigationAsync(string name, NavigationBuilder builder)
-        {
-            if (!NavigationHelper.IsAdminMenu(name))
-            {
-                return Task.CompletedTask;
-            }
-
-            builder
-                .Add(S["Security"], security => security
-                    .Add(S["Authentication"], authentication => authentication
-                    .Add(S["Sign in with X"], S["Sign in with X"].PrefixPosition(), x => x
-                        .AddClass("x")
-                        .Id("x")
-                        .Action("Index", "Admin", _routeValues)
-                        .Permission(Permissions.ManageTwitterSignin)
-                        .LocalNav())
-                    )
-                );
-
-            return Task.CompletedTask;
-        }
+    public AdminMenuSignIn(IStringLocalizer<AdminMenuSignIn> stringLocalizer)
+    {
+        S = stringLocalizer;
     }
 
-    public sealed class AdminMenu : INavigationProvider
+    protected override ValueTask BuildAsync(NavigationBuilder builder)
     {
-        private static readonly RouteValueDictionary _routeValues = new()
+        if (NavigationHelper.UseLegacyFormat())
         {
-            { "area", "OrchardCore.Settings" },
-            { "groupId", TwitterConstants.Features.Twitter },
-        };
+            builder
+           .Add(S["Security"], security => security
+               .Add(S["Authentication"], authentication => authentication
 
-        internal readonly IStringLocalizer S;
+               .Add(S["Sign In with X (Twitter)"], S["Sign In with X (Twitter)"].PrefixPosition(), twitter => twitter
+                   .AddClass("twitter")
+                   .Id("twitter")
+                   .Action("Index", "Admin", _routeValues)
+                   .Permission(Permissions.ManageTwitterSignin)
+                   .LocalNav())
+               )
+           );
 
-        public AdminMenu(IStringLocalizer<AdminMenu> localizer)
-        {
-            S = localizer;
+            return ValueTask.CompletedTask;
         }
 
-        public Task BuildNavigationAsync(string name, NavigationBuilder builder)
-        {
-            if (!NavigationHelper.IsAdminMenu(name))
-            {
-                return Task.CompletedTask;
-            }
-
-            builder
-                .Add(S["Configuration"], configuration => configuration
-                    .Add(S["Settings"], settings => settings
-                        .Add(S["X"], S["X"].PrefixPosition(), twitter => twitter
-                            .AddClass("x").Id("x")
+        builder
+            .Add(S["Settings"], settings => settings
+                .Add(S["Security"], S["Security"].PrefixPosition(), security => security
+                    .Add(S["Authentication"], S["Authentication"].PrefixPosition(), authentication => authentication
+                        .Add(S["Sign In with X (Twitter)"], S["Sign In with X (Twitter)"].PrefixPosition(), twitter => twitter
+                            .AddClass("twitter")
+                            .Id("twitter")
                             .Action("Index", "Admin", _routeValues)
-                            .Permission(Permissions.ManageTwitter)
+                            .Permission(Permissions.ManageTwitterSignin)
                             .LocalNav()
                         )
                     )
-                );
+                )
+            );
 
-            return Task.CompletedTask;
-        }
+        return ValueTask.CompletedTask;
     }
 }

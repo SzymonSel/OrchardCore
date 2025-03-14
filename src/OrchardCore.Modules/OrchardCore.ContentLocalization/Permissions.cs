@@ -1,26 +1,29 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using OrchardCore.Security.Permissions;
 
 namespace OrchardCore.ContentLocalization;
 
 public sealed class Permissions : IPermissionProvider
 {
-    public static readonly Permission LocalizeContent = new("LocalizeContent", "Localize content for others");
-    public static readonly Permission LocalizeOwnContent = new("LocalizeOwnContent", "Localize own content", new[] { LocalizeContent });
-    public static readonly Permission ManageContentCulturePicker = new("ManageContentCulturePicker", "Manage ContentCulturePicker settings");
-
     private readonly IEnumerable<Permission> _allPermissions =
     [
-        LocalizeContent,
-        LocalizeOwnContent,
-        ManageContentCulturePicker,
+        ContentLocalizationPermissions.LocalizeContent,
+        ContentLocalizationPermissions.LocalizeOwnContent,
+        ContentLocalizationPermissions.ManageContentCulturePicker,
     ];
 
     private readonly IEnumerable<Permission> _generalPermissions =
     [
-        LocalizeOwnContent,
+        ContentLocalizationPermissions.LocalizeOwnContent,
     ];
+
+    [Obsolete("This will be removed in a future release. Instead use 'ContentLocalizationPermissions.LocalizeContent'.")]
+    public static readonly Permission LocalizeContent = ContentLocalizationPermissions.LocalizeContent;
+
+    [Obsolete("This will be removed in a future release. Instead use 'ContentLocalizationPermissions.LocalizeOwnContent'.")]
+    public static readonly Permission LocalizeOwnContent = ContentLocalizationPermissions.LocalizeOwnContent;
+
+    [Obsolete("This will be removed in a future release. Instead use 'ContentLocalizationPermissions.ManageContentCulturePicker'.")]
+    public static readonly Permission ManageContentCulturePicker = ContentLocalizationPermissions.ManageContentCulturePicker;
 
     public Task<IEnumerable<Permission>> GetPermissionsAsync()
         => Task.FromResult(_allPermissions);

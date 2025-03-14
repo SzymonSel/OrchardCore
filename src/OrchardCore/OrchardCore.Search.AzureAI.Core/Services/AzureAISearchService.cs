@@ -1,9 +1,8 @@
-using System;
-using System.Threading.Tasks;
 using Azure.Search.Documents;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OrchardCore.Contents.Indexing;
+using OrchardCore.Entities;
 using OrchardCore.Search.Abstractions;
 using OrchardCore.Search.AzureAI.Models;
 using OrchardCore.Settings;
@@ -62,12 +61,12 @@ public class AzureAISearchService : ISearchService
 
         if (indexSettings is null)
         {
-            _logger.LogWarning("Azure AI Search: Couldn't execute search. Unable to get the search index settings. Index name {indexName}", index);
+            _logger.LogWarning("Azure AI Search: Couldn't execute search. Unable to get the search index settings. Index name {IndexName}", index);
 
             return result;
         }
 
-        result.Latest = indexSettings.IndexLatest;
+        result.Latest = indexSettings.As<ContentIndexMetadata>().IndexLatest;
 
         try
         {

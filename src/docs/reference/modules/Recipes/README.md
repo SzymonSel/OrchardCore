@@ -44,8 +44,13 @@ A recipe file should look like this:
 
 A recipe can execute multiple steps.
 
-In order to create a new Recipe step, you need to implement the `IRecipeStepHandler` interface and the `ExecuteAsync` method:
-`public async Task ExecuteAsync(RecipeExecutionContext context)`
+To create a new recipe step, implement the `IRecipeStepHandler` interface and its `ExecuteAsync` method:
+
+```csharp
+public async Task ExecuteAsync(RecipeExecutionContext context)
+```
+
+Alternatively, you can extend `NamedRecipeStepHandler` and implement the required abstract method, providing additional functionality for named steps.
 
 Here are the available recipe steps:
 
@@ -150,7 +155,7 @@ You can also set the default Lucene Settings.
 
 ### Reset Lucene Search Index Step
 
-This Reset Lucene Index Step resets a lucene index.
+This Reset Lucene Index Step resets a Lucene index.
 Restarts the indexing process from the beginning in order to update current content items.
 It doesn't delete existing entries from the index.
 
@@ -175,7 +180,7 @@ The `includeAll` property indicates whether to include all available Lucene indi
 
 ### Rebuild Lucene Search Index Step
 
-This Rebuild Lucene Index Step rebuilds a lucene index.
+This Rebuild Lucene Index Step rebuilds a Lucene index.
 Deletes and recreates the full index content.
 
 The `includeAll` property indicates whether to include all available Lucene indices. When set to `true`, the `Indices` property can be omitted.
@@ -463,12 +468,12 @@ Recipes can use script helpers like this:
 }
 ```
 
-| Name | Description |
-| --- | --- |
-| `uuid()` | Generates a unique identifier for a content item. |
-| `base64(string)` | Decodes the specified string from Base64 encoding. Use <https://www.base64-image.de/> to convert your files to base64. |
-| `html(string)` | Decodes the specified string from HTML encoding. |
-| `gzip(string)` | Decodes the specified string from gzip/base64 encoding. Use <http://www.txtwizard.net/compression> to gzip your strings. |
+| Name             | Description                                                                                                              |
+|------------------|--------------------------------------------------------------------------------------------------------------------------|
+| `uuid()`         | Generates a unique identifier for a content item.                                                                        |
+| `base64(string)` | Decodes the specified string from Base64 encoding. Use <https://www.base64-image.de/> to convert your files to base64.   |
+| `html(string)`   | Decodes the specified string from HTML encoding.                                                                         |
+| `gzip(string)`   | Decodes the specified string from gzip/base64 encoding. Use <http://www.txtwizard.net/compression> to gzip your strings. |
 
 ## Recipe Migrations
 

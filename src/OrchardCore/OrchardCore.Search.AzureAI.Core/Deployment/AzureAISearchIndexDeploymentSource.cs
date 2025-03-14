@@ -1,36 +1,38 @@
-using System.Linq;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using OrchardCore.Deployment;
-using OrchardCore.Search.AzureAI.Deployment.Models;
+using OrchardCore.Modules;
 using OrchardCore.Search.AzureAI.Models;
 using OrchardCore.Search.AzureAI.Services;
 
 namespace OrchardCore.Search.AzureAI.Deployment;
 
-public class AzureAISearchIndexDeploymentSource : IDeploymentSource
+public sealed class AzureAISearchIndexDeploymentSource
+    : DeploymentSourceBase<AzureAISearchIndexDeploymentStep>
 {
     private readonly AzureAISearchIndexSettingsService _indexSettingsService;
+    private readonly IEnumerable<IAzureAISearchIndexSettingsHandler> _handlers;
+    private readonly ILogger _logger;
 
-    public AzureAISearchIndexDeploymentSource(AzureAISearchIndexSettingsService indexSettingsService)
+    public AzureAISearchIndexDeploymentSource(
+        AzureAISearchIndexSettingsService indexSettingsService,
+        IEnumerable<IAzureAISearchIndexSettingsHandler> handlers,
+        ILogger<AzureAISearchIndexDeploymentSource> logger)
     {
         _indexSettingsService = indexSettingsService;
+        _handlers = handlers;
+        _logger = logger;
     }
 
-    public async Task ProcessDeploymentStepAsync(DeploymentStep step, DeploymentPlanResult result)
+    protected override async Task ProcessAsync(AzureAISearchIndexDeploymentStep step, DeploymentPlanResult result)
     {
-        if (step is not AzureAISearchIndexDeploymentStep indexStep)
-        {
-            return;
-        }
-
         var indexSettings = await _indexSettingsService.GetSettingsAsync();
 
         var data = new JsonArray();
 
-        var indicesToAdd = indexStep.IncludeAll
+        var indicesToAdd = step.IncludeAll
             ? indexSettings.Select(x => x.IndexName).ToArray()
-            : indexStep.IndexNames;
+            : step.IndexNames;
 
         foreach (var index in indexSettings)
         {
@@ -39,9 +41,18 @@ public class AzureAISearchIndexDeploymentSource : IDeploymentSource
                 continue;
             }
 
-            var indexInfo = GetIndexInfo(index);
+            var indexInfo = new JsonObject()
+            {
+                { "IndexName", index.IndexName },
+                { "AnalyzerName", index.AnalyzerName },
+                { "QueryAnalyzerName", index.QueryAnalyzerName },
+            };
 
-            data.Add(JObject.FromObject(indexInfo));
+            var exportingContext = new AzureAISearchIndexSettingsExportingContext(index, indexInfo);
+
+            await _handlers.InvokeAsync((handler, context) => handler.ExportingAsync(context), exportingContext, _logger);
+
+            data.Add(indexInfo);
         }
 
         result.Steps.Add(new JsonObject
@@ -50,15 +61,4 @@ public class AzureAISearchIndexDeploymentSource : IDeploymentSource
             ["Indices"] = data,
         });
     }
-
-    private static AzureAISearchIndexInfo GetIndexInfo(AzureAISearchIndexSettings settings)
-        => new()
-        {
-            IndexName = settings.IndexName,
-            AnalyzerName = settings.AnalyzerName,
-            QueryAnalyzerName = settings.QueryAnalyzerName,
-            IndexedContentTypes = settings.IndexedContentTypes ?? [],
-            IndexLatest = settings.IndexLatest,
-            Culture = settings.Culture,
-        };
 }

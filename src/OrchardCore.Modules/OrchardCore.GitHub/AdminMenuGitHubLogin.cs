@@ -1,35 +1,48 @@
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
 using OrchardCore.Navigation;
 
-namespace OrchardCore.GitHub
+namespace OrchardCore.GitHub;
+
+public sealed class AdminMenuGitHubLogin : AdminNavigationProvider
 {
-    public sealed class AdminMenuGitHubLogin : INavigationProvider
+    private static readonly RouteValueDictionary _routeValues = new()
     {
-        private static readonly RouteValueDictionary _routeValues = new()
-        {
-            { "area", "OrchardCore.Settings" },
-            { "groupId", GitHubConstants.Features.GitHubAuthentication },
-        };
+        { "area", "OrchardCore.Settings" },
+        { "groupId", GitHubConstants.Features.GitHubAuthentication },
+    };
 
-        internal readonly IStringLocalizer S;
+    internal readonly IStringLocalizer S;
 
-        public AdminMenuGitHubLogin(IStringLocalizer<AdminMenuGitHubLogin> localizer)
+    public AdminMenuGitHubLogin(IStringLocalizer<AdminMenuGitHubLogin> stringLocalizer)
+    {
+        S = stringLocalizer;
+    }
+
+    protected override ValueTask BuildAsync(NavigationBuilder builder)
+    {
+        if (NavigationHelper.UseLegacyFormat())
         {
-            S = localizer;
+            builder
+            .Add(S["Security"], security => security
+                .Add(S["Authentication"], authentication => authentication
+                    .Add(S["GitHub"], S["GitHub"].PrefixPosition(), settings => settings
+                        .AddClass("github")
+                        .Id("github")
+                        .Action("Index", "Admin", _routeValues)
+                        .Permission(Permissions.ManageGitHubAuthentication)
+                        .LocalNav()
+                    )
+                )
+            );
+
+            return ValueTask.CompletedTask;
         }
 
-        public Task BuildNavigationAsync(string name, NavigationBuilder builder)
-        {
-            if (!NavigationHelper.IsAdminMenu(name))
-            {
-                return Task.CompletedTask;
-            }
-
-            builder
-                .Add(S["Security"], security => security
-                    .Add(S["Authentication"], authentication => authentication
+        builder
+            .Add(S["Settings"], settings => settings
+                .Add(S["Security"], S["Security"].PrefixPosition(), security => security
+                    .Add(S["Authentication"], S["Authentication"].PrefixPosition(), authentication => authentication
                         .Add(S["GitHub"], S["GitHub"].PrefixPosition(), settings => settings
                             .AddClass("github")
                             .Id("github")
@@ -38,9 +51,9 @@ namespace OrchardCore.GitHub
                             .LocalNav()
                         )
                     )
-                );
+                )
+            );
 
-            return Task.CompletedTask;
-        }
+        return ValueTask.CompletedTask;
     }
 }

@@ -1,7 +1,4 @@
-using System;
-using System.Linq;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using OrchardCore.BackgroundJobs;
 using OrchardCore.Recipes.Models;
@@ -11,15 +8,15 @@ using OrchardCore.Search.AzureAI.Services;
 
 namespace OrchardCore.Search.AzureAI.Recipes;
 
-public class AzureAISearchIndexResetStep : IRecipeStepHandler
+public sealed class AzureAISearchIndexResetStep : NamedRecipeStepHandler
 {
-    public async Task ExecuteAsync(RecipeExecutionContext context)
+    public AzureAISearchIndexResetStep()
+        : base(AzureAISearchIndexResetDeploymentSource.Name)
     {
-        if (!string.Equals(context.Name, AzureAISearchIndexResetDeploymentSource.Name, StringComparison.OrdinalIgnoreCase))
-        {
-            return;
-        }
+    }
 
+    protected override async Task HandleAsync(RecipeExecutionContext context)
+    {
         var model = context.Step.ToObject<AzureAISearchIndexResetDeploymentStep>();
 
         if (model == null)
@@ -34,7 +31,6 @@ public class AzureAISearchIndexResetStep : IRecipeStepHandler
 
         await HttpBackgroundJob.ExecuteAfterEndOfRequestAsync(AzureAISearchIndexRebuildDeploymentSource.Name, async scope =>
         {
-            var searchIndexingService = scope.ServiceProvider.GetService<AzureAISearchIndexingService>();
             var indexSettingsService = scope.ServiceProvider.GetService<AzureAISearchIndexSettingsService>();
             var indexManager = scope.ServiceProvider.GetRequiredService<AzureAISearchIndexManager>();
             var indexDocumentManager = scope.ServiceProvider.GetRequiredService<AzureAIIndexDocumentManager>();
@@ -45,20 +41,15 @@ public class AzureAISearchIndexResetStep : IRecipeStepHandler
 
             foreach (var settings in indexSettings)
             {
-                settings.SetLastTaskId(0);
-                settings.IndexMappings = await indexDocumentManager.GetMappingsAsync(settings);
-
+                await indexSettingsService.ResetAsync(settings);
+                await indexSettingsService.UpdateAsync(settings);
                 if (!await indexManager.ExistsAsync(settings.IndexName))
                 {
-                    settings.IndexFullName = indexManager.GetFullIndexName(settings.IndexName);
-
                     await indexManager.CreateAsync(settings);
                 }
 
-                await indexSettingsService.UpdateAsync(settings);
+                await indexSettingsService.SynchronizeAsync(settings);
             }
-
-            await searchIndexingService.ProcessContentItemsAsync(indexSettings.Select(settings => settings.IndexName).ToArray());
         });
     }
 }

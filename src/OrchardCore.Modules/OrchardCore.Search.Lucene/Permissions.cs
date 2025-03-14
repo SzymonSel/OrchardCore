@@ -1,16 +1,16 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using OrchardCore.Security.Permissions;
 
 namespace OrchardCore.Search.Lucene;
 
 public sealed class Permissions : IPermissionProvider
 {
-    public static readonly Permission ManageLuceneIndexes = LuceneIndexPermissionHelper.ManageLuceneIndexes;
-
-    public static readonly Permission QueryLuceneApi = new("QueryLuceneApi", "Query Lucene Api", new[] { ManageLuceneIndexes });
-
     private readonly LuceneIndexSettingsService _luceneIndexSettingsService;
+
+    [Obsolete("This will be removed in a future release. Instead use 'LuceneSearchPermissions.ManageLuceneIndexes'.")]
+    public static readonly Permission ManageLuceneIndexes = LuceneSearchPermissions.ManageLuceneIndexes;
+
+    [Obsolete("This will be removed in a future release. Instead use 'LuceneSearchPermissions.QueryLuceneApi'.")]
+    public static readonly Permission QueryLuceneApi = LuceneSearchPermissions.QueryLuceneApi;
 
     public Permissions(LuceneIndexSettingsService luceneIndexSettingsService)
     {
@@ -21,8 +21,8 @@ public sealed class Permissions : IPermissionProvider
     {
         var permissions = new List<Permission>()
         {
-            ManageLuceneIndexes,
-            QueryLuceneApi,
+            LuceneSearchPermissions.ManageLuceneIndexes,
+            LuceneSearchPermissions.QueryLuceneApi,
         };
 
         var luceneIndexSettings = await _luceneIndexSettingsService.GetSettingsAsync();
@@ -42,7 +42,7 @@ public sealed class Permissions : IPermissionProvider
             Name = OrchardCoreConstants.Roles.Administrator,
             Permissions =
             [
-                ManageLuceneIndexes,
+                LuceneSearchPermissions.ManageLuceneIndexes,
             ],
         },
         new PermissionStereotype
@@ -50,7 +50,7 @@ public sealed class Permissions : IPermissionProvider
             Name = OrchardCoreConstants.Roles.Editor,
             Permissions =
             [
-                QueryLuceneApi,
+                LuceneSearchPermissions.QueryLuceneApi,
             ],
         },
     ];
